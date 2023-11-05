@@ -1,6 +1,7 @@
 const express = require("express")
 const cors = require("cors")
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const cookieParser = require('cookie-parser')
 require('dotenv').config()
 var jwt = require('jsonwebtoken');
 const app = express()
@@ -9,9 +10,27 @@ const port = process.env.PORT||5000;
 
 // middleware
 app.use(express.json())
-app.use(cors())
+app.use(cors({
+    origin:[],
+    credentials:true
+}))
+app.use(cookieParser())
 
-
+// custom middleware
+const verify = (req,res,next)=>{
+    const cookie = req?.cookies?.token;
+    console.log(cookie)
+    if(!cookie){
+        return res.status(401).send({massage:'unauthorized access'})
+    }
+    jwt.verify(cookie,process.env.PRIVATE_KEY,(err,decode)=>{
+        if(err){
+            return res.status(401).send({massage:'unauthorized access'})
+        }
+        req.user=decode
+        next()
+    })
+}
 
 // mongodb connection
 const uri = `mongodb+srv://${process.env.USER}:${process.env.PASSWORD}@cluster0.m2apie0.mongodb.net/?retryWrites=true&w=majority`;
@@ -52,7 +71,7 @@ async function run() {
     // services apis
     const servicesCollection =client.db("HomeRepair").collection("services") 
 
-    app.get('/api/v1/services',async(req,res)=>{
+    app.get('/api/v1/services',verify,async(req,res)=>{
         const result = await servicesCollection.find().toArray()
         res.send(result)
     })
