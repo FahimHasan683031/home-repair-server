@@ -2,6 +2,7 @@ const express = require("express")
 const cors = require("cors")
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
+var jwt = require('jsonwebtoken');
 const app = express()
 const port = process.env.PORT||5000;
 
@@ -27,6 +28,26 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
+
+    // jwt authorization apis
+    app.post('/api/v1/access',async(req,res)=>{
+        const user = req.body;
+       const token= jwt.sign(user,process.env.PRIVATE_KEY,{expiresIn:"1h"})
+       console.log(token)
+       res
+       .cookie("token",token,{
+        httpOnly:true,
+        secure:true,
+        sameSite:"none"
+       })
+       .send({success:true})
+    })
+
+    app.post('/api/v1/logout',async(req,res)=>{
+        res
+        .clearCookie('token',{maxAge:0})
+        .send({success:true})
+    })
 
     // services apis
     const servicesCollection =client.db("HomeRepair").collection("services") 
