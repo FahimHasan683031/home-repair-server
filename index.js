@@ -78,8 +78,58 @@ async function run() {
         const result = await servicesCollection.updateOne(filter,updateService,options)
         res.send(result)
     })
-    
 
+
+    
+    // bookings apis
+    const bookingsCollection =client.db("HomeRepair").collection("bookings")
+    app.get('/api/v1/bookings',async(req,res)=>{
+        const result = await bookingsCollection.find().toArray()
+        res.send(result)
+    })
+    app.get('/api/v1/bookings/:id',async(req,res)=>{
+        const id  =req.params.id;
+        console.log(id)
+        const query = {_id:new ObjectId(id)}
+        const result =await bookingsCollection.findOne(query)
+        res.send(result)
+    })
+    app.get('/api/v1/user/bookings',async(req,res)=>{
+        const email =req.query.email
+        console.log(email)
+        const query = {email:email}
+        const result =await bookingsCollection.find(query).toArray()
+        res.send(result)
+    })
+    app.post('/api/v1/bookings',async(req,res)=>{
+        const data = req.body
+        const result = await bookingsCollection.insertOne(data)
+        res.send(result)
+    })
+    app.delete("/api/v1/bookings/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = {
+          _id: new ObjectId(id),
+        };
+        const result = await bookingsCollection.deleteOne(query);
+        res.send(result);
+      });
+    app.put('/api/v1/bookings/:id',async(req,res)=>{
+        const id  = req.params.id;
+        const data = req.body;
+        const filter = {_id:new ObjectId(id)}
+        const options = { upsert: true };
+        const updateService = {
+            $set: {
+                serviceName: data.serviceName,
+                servicesImage: data.servicesImage,
+                description: data.description,
+                email: data.email
+            },
+        }
+        const result = await bookingsCollection.updateOne(filter,updateService,options)
+        res.send(result)
+    })
    
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
