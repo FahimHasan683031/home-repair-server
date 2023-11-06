@@ -72,11 +72,15 @@ async function run() {
     const servicesCollection =client.db("HomeRepair").collection("services") 
 
     app.get('/api/v1/services',async(req,res)=>{
-        const query = {}
+        let query = {}
+        const limit = req.query.limit ? parseInt(req.query.limit) : 0;
         if(req.query.email){
             query.email=req.query.email
         }
-        const result = await servicesCollection.find(query).toArray()
+        if(req.query.serviceName){
+            query.serviceName={ $regex: new RegExp(req.query.serviceName, 'i') }
+        }
+        const result = await servicesCollection.find(query).limit(limit).toArray()
         res.send(result)
     })
     app.get('/api/v1/services/:id',async(req,res)=>{
