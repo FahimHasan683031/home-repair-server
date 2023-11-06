@@ -11,7 +11,7 @@ const port = process.env.PORT||5000;
 // middleware
 app.use(express.json())
 app.use(cors({
-    origin:[],
+    origin:["http://localhost:5173"],
     credentials:true
 }))
 app.use(cookieParser())
@@ -71,8 +71,12 @@ async function run() {
     // services apis
     const servicesCollection =client.db("HomeRepair").collection("services") 
 
-    app.get('/api/v1/services',verify,async(req,res)=>{
-        const result = await servicesCollection.find().toArray()
+    app.get('/api/v1/services',async(req,res)=>{
+        const query = {}
+        if(req.query.email){
+            query.email=req.query.email
+        }
+        const result = await servicesCollection.find(query).toArray()
         res.send(result)
     })
     app.get('/api/v1/services/:id',async(req,res)=>{
@@ -82,13 +86,7 @@ async function run() {
         const result =await servicesCollection.findOne(query)
         res.send(result)
     })
-    app.get('/api/v1/user/services',async(req,res)=>{
-        const email =req.query.email
-        console.log(email)
-        const query = {email:email}
-        const result =await servicesCollection.find(query).toArray()
-        res.send(result)
-    })
+    
     app.post('/api/v1/services',async(req,res)=>{
         const data = req.body
         const result = await servicesCollection.insertOne(data)
